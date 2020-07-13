@@ -85,16 +85,11 @@ class AlignCollate(object):
                 image = Image.fromarray(image, 'L')
 
             ratio = w / float(h)
-            if math.ceil(self.imgH * ratio) > self.imgW:
-                resized_w = self.imgW
-            else:
-                resized_w = math.ceil(self.imgH * ratio)
-
+            resized_w = min(math.ceil(self.imgH * ratio), self.imgW)
             resized_image = image.resize((resized_w, self.imgH), Image.BICUBIC)
             resized_images.append(transform(resized_image))
 
-        image_tensors = torch.cat([t.unsqueeze(0) for t in resized_images], 0)
-        return image_tensors   
+        return torch.cat([t.unsqueeze(0) for t in resized_images], 0)   
 
 def recognizer_predict(model, converter, test_loader, batch_max_length,\
                        ignore_idx, char_group_idx, decoder = 'greedy', beamWidth= 5, device = 'cpu'):  

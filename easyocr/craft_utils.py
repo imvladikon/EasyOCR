@@ -86,7 +86,7 @@ def getPoly_core(boxes, labels, mapper, linkmap):
     max_r = 2.0
     step_r = 0.2
 
-    polys = []  
+    polys = []
     for k, box in enumerate(boxes):
         # size filter for small instance
         w, h = int(np.linalg.norm(box[0] - box[1]) + 1), int(np.linalg.norm(box[1] - box[2]) + 1)
@@ -131,8 +131,8 @@ def getPoly_core(boxes, labels, mapper, linkmap):
         seg_num = 0
         num_sec = 0
         prev_h = -1
-        for i in range(0,len(cp)):
-            (x, sy, ey) = cp[i]
+        for item in cp:
+            (x, sy, ey) = item
             if (seg_num + 1) * seg_w <= x and seg_num <= tot_seg:
                 # average previous segment
                 if num_sec == 0: break
@@ -209,8 +209,7 @@ def getPoly_core(boxes, labels, mapper, linkmap):
             polys.append(None); continue
 
         # make final polygon
-        poly = []
-        poly.append(warpCoord(Minv, (spp[0], spp[1])))
+        poly = [warpCoord(Minv, (spp[0], spp[1]))]
         for p in new_pp:
             poly.append(warpCoord(Minv, (p[0], p[1])))
         poly.append(warpCoord(Minv, (epp[0], epp[1])))
@@ -237,7 +236,7 @@ def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly
 def adjustResultCoordinates(polys, ratio_w, ratio_h, ratio_net = 2):
     if len(polys) > 0:
         polys = np.array(polys)
-        for k in range(len(polys)):
-            if polys[k] is not None:
-                polys[k] *= (ratio_w * ratio_net, ratio_h * ratio_net)
+        for poly in polys:
+            if poly is not None:
+                poly *= (ratio_w * ratio_net, ratio_h * ratio_net)
     return polys

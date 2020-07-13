@@ -21,8 +21,7 @@ def word_segmentation(mat, separator_idx =  {'th': [1,2],'en': [3,4]}, separator
     start_idx = 0
     sep_lang = ''
     for sep_idx in separator_idx_list:
-        if sep_idx % 2 == 0: mode ='first'
-        else: mode ='last'
+        mode = 'first' if sep_idx % 2 == 0 else 'last'
         a = consecutive( np.argwhere(mat == sep_idx).flatten(), mode)
         new_sep = [ [item, sep_idx] for item in a]
         sep_list += new_sep
@@ -208,7 +207,9 @@ def ctcBeamSearch(mat, classes, ignore_idx, lm, beamWidth=25, dict_list = []):
         res = ''
         for i,l in enumerate(bestLabeling):
             # removing repeated characters and blank.
-            if l not in ignore_idx and (not (i > 0 and bestLabeling[i - 1] == bestLabeling[i])):
+            if l not in ignore_idx and (
+                i <= 0 or bestLabeling[i - 1] != bestLabeling[i]
+            ):
                 res += classes[l]
     else:
         res = last.wordsearch(classes, ignore_idx, 20, dict_list)
@@ -346,9 +347,7 @@ def four_point_transform(image, rect):
 
     # compute the perspective transform matrix and then apply it
     M = cv2.getPerspectiveTransform(rect, dst)
-    warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
-
-    return warped
+    return cv2.warpPerspective(image, M, (maxWidth, maxHeight))
 
 def contrast_grey(img):
     high = np.percentile(img, 90)
@@ -401,11 +400,7 @@ def group_text_box(polys, slope_ths = 0.1, ycenter_ths = 0.5, height_ths = 0.5, 
     new_box = []
     for poly in horizontal_list:
 
-        if len(new_box) == 0:
-            b_height = [poly[5]]
-            b_ycenter = [poly[4]]
-            new_box.append(poly)
-        else:
+        if new_box:
             # comparable height and comparable y_center level up to ths*height
             if (abs(np.mean(b_height) - poly[5]) < height_ths*np.mean(b_height)) and (abs(np.mean(b_ycenter) - poly[4]) < ycenter_ths*np.mean(b_height)):
                 b_height.append(poly[5])
@@ -416,6 +411,10 @@ def group_text_box(polys, slope_ths = 0.1, ycenter_ths = 0.5, height_ths = 0.5, 
                 b_ycenter = [poly[4]]
                 combined_list.append(new_box)
                 new_box = [poly]
+        else:
+            b_height = [poly[5]]
+            b_ycenter = [poly[4]]
+            new_box.append(poly)
     combined_list.append(new_box)
 
     # merge list use sort again
@@ -429,10 +428,7 @@ def group_text_box(polys, slope_ths = 0.1, ycenter_ths = 0.5, height_ths = 0.5, 
 
             merged_box, new_box = [],[]
             for box in boxes:
-                if len(new_box) == 0:
-                    x_max = box[1]
-                    new_box.append(box)
-                else:
+                if new_box:
                     if abs(box[0]-x_max) < width_ths *(box[3]-box[2]): # merge boxes
                         x_max = box[1]
                         new_box.append(box)
@@ -440,7 +436,10 @@ def group_text_box(polys, slope_ths = 0.1, ycenter_ths = 0.5, height_ths = 0.5, 
                         x_max = box[1]
                         merged_box.append(new_box)
                         new_box = [box]
-            if len(new_box) >0: merged_box.append(new_box)
+                else:
+                    x_max = box[1]
+                    new_box.append(box)
+            if new_box: merged_box.append(new_box)
 
             for mbox in merged_box:
                 if len(mbox) != 1: # adjacent box in same line

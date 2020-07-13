@@ -33,8 +33,7 @@ def parse_args():
         default=True,
         help="Using GPU (default: True)",
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def main():

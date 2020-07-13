@@ -23,8 +23,7 @@ class double_conv(nn.Module):
         )
 
     def forward(self, x):
-        x = self.conv(x)
-        return x
+        return self.conv(x)
 
 
 class CRAFT(nn.Module):
